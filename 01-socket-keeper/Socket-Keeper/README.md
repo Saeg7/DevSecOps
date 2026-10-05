@@ -1,35 +1,119 @@
-cat <<'EOF' > README.md
+Вот готовый, красиво оформленный Markdown для твоего файла **README.md**. Можешь просто скопировать его текст напрямую и вставить в VS Code или на сам GitHub.
+
+---
+
 # 🛡️ Socket Keeper — Secure C++ POSIX Web Server
 
-![C++17](https://img.shields.io/badge/C++-17-00599C?style=flat&logo=cplusplus)
-![Linux](https://img.shields.io/badge/Linux-Ubuntu-FCC624?style=flat&logo=linux)
-![Security](https://img.shields.io/badge/Security-UFW%20%7C%20Fail2ban-red?style=flat)
-![Build](https://img.shields.io/badge/Build-CMake-064F8C?style=flat&logo=cmake)
-
-**Socket Keeper** is a lightweight, low-level HTTP web server written in C++17 using POSIX sockets. The project demonstrates core **DevSecOps principles** by pairing raw socket networking with automated host-based security hardening (UFW firewalling & Fail2ban rate-limiting).
+**Socket Keeper** — это лёгкий веб-сервер на C++17, написанный с использованием низкоуровневых системных вызовов POSIX Sockets. Проект демонстрирует фундаментальные концепции **DevSecOps**: безопасную разработку сетевых сервисов и автоматизированное укрепление хоста (Host Hardening) с помощью фаервола UFW и защиты от DDoS/брутфорса через Fail2ban.
 
 ---
 
-## 🚀 Architectural Overview
+## 🚀 Архитектура и особенности
 
-* **Multithreaded Connection Handling:** Spawns decoupled threads (`std::thread`) per client request to ensure responsiveness under load.
-* **POSIX Networking:** Built directly on system sockets (`sys/socket.h`, `arpa/inet.h`) without heavy third-party web frameworks.
-* **Automated Security Hardening (`harden.sh`):**
-  * **UFW Integration:** Sets a strict default-deny incoming policy, allowing only essential ports (`22/TCP` for SSH, `8080/TCP` for HTTP).
-  * **Fail2ban Jail:** Parses server log streams (`socket_keeper.log`) using custom regex patterns to dynamically ban IP addresses exhibiting rapid-fire request behavior.
-  * **Principle of Least Privilege:** Automates build and runtime execution so the binary runs strictly under non-root user privileges.
+* **POSIX Socket Networking:** Сервер работает напрямую с сетевым стеком ОС (`sys/socket.h`, `arpa/inet.h`) без сторонних тяжелых фреймворков.
+* **Многопоточность:** Обработка входящих клиентских соединений асинхронно через `std::thread`.
+* **Автоматизация безопасности (`harden.sh`):**
+* **UFW Firewall:** Настройка политики `default deny incoming`, разрешающей только необходимые порты (`22/TCP` SSH и `8080/TCP` HTTP).
+* **Fail2ban Jail:** Динамический анализ лог-файла `socket_keeper.log` по регулярным выражениям и автоматический бан IP-адресов при превышении лимита запросов.
+* **Принцип наименьших привилегий (Least Privilege):** Скрипт автоматизации сбрасывает права `root` после сборки и запускает сервер от обычного пользователя.
+
+
 
 ---
 
-## 🛠️ Project Structure
+## 🛠️ Структура проекта
 
 ```text
 socket-keeper/
-├── CMakeLists.txt        # Build system configuration
-├── public/               # Static assets
-│   └── index.html        # Served HTML page
+├── CMakeLists.txt        # Конфигурация сборки CMake
+├── public/               # Статические ресурсы
+│   └── index.html        # HTML-страница резюме
 ├── scripts/
-│   └── harden.sh         # Security hardening & build automation script
+│   └── harden.sh         # Скрипт автоматизации UFW, Fail2ban и сборки
 ├── src/
-│   └── main.cpp          # C++ HTTP server source code
-└── README.md             # Project documentation
+│   └── main.cpp          # Исходный код C++ HTTP-сервера
+└── README.md             # Документация проекта
+
+```
+
+---
+
+## 🚦 Быстрый запуск
+
+### Требования
+
+* ОС Linux (Ubuntu / Debian)
+* Компилятор GCC или Clang с поддержкой C++17
+* CMake 3.10+
+* Установленные утилиты `ufw` и `fail2ban`
+
+```bash
+sudo apt update && sudo apt install -y build-essential cmake ufw fail2ban
+
+```
+
+### Автоматическая сборка и настройка защиты
+
+Запустите скрипт автоматизации с правами `sudo`. Он настроит сетевой экран, правила Fail2ban, соберет C++ приложение и запустит сервер от имени обычного пользователя:
+
+```bash
+chmod +x scripts/harden.sh
+sudo ./scripts/harden.sh
+
+```
+
+---
+
+## 🧪 Тестирование
+
+### 1. Проверка работы HTTP-сервера
+
+Отправьте HTTP-запрос через `curl`, чтобы проверить верность заголовков и статус ответа:
+
+```bash
+curl -i http://localhost:8080
+
+```
+
+**Ожидаемый ответ:**
+
+```http
+HTTP/1.1 200 OK
+Content-Type: text/html; charset=UTF-8
+Content-Length: 1833
+Connection: close
+
+<!DOCTYPE html>
+...
+
+```
+
+### 2. Тестирование блокировки IP (Rate Limiting)
+
+Симулируйте серию частых запросов для срабатывания защиты Fail2ban:
+
+```bash
+for i in {1..15}; do curl -s http://localhost:8080 > /dev/null; done
+
+```
+
+Проверьте статус блокировки в Fail2ban:
+
+```bash
+sudo fail2ban-client status socket-keeper-ratelimit
+
+```
+
+---
+
+## 🛡️ DevSecOps практики в проекте
+
+1. **Строгое соответствие RFC HTTP/1.1:** Форматирование заголовков с символами переноса строки `\r\n` предотвращает ошибки парсинга у клиентов и уязвимости HTTP Header Injection.
+2. **Изоляция рабочей директории:** Автоматическая привязка путей к корню проекта защищает от ошибок доступа к файловой системе (404 Not Found).
+3. **Аудит и логирование:** Форматированный вывод логов (`[INFO]`, `[REQUEST]`, `[ERROR]`) позволяет мониторить входящий трафик в реальном времени.
+
+---
+
+## 📝 Лицензия
+
+Проект распространяется под лицензией MIT.
