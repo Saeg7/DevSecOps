@@ -1,59 +1,35 @@
-<div align="center">
+cat <<'EOF' > README.md
+# 🛡️ Socket Keeper — Secure C++ POSIX Web Server
 
-# 🛡️ Socket Keeper
+![C++17](https://img.shields.io/badge/C++-17-00599C?style=flat&logo=cplusplus)
+![Linux](https://img.shields.io/badge/Linux-Ubuntu-FCC624?style=flat&logo=linux)
+![Security](https://img.shields.io/badge/Security-UFW%20%7C%20Fail2ban-red?style=flat)
+![Build](https://img.shields.io/badge/Build-CMake-064F8C?style=flat&logo=cmake)
 
-**Высокопроизводительное Go-приложение для управления сетевыми сокетами и DevSecOps-практиками.**
-
-[![Go Version](https://img.shields.io/badge/Go-1.22%2B-00ADD8?style=flat-square&logo=go)](https://golang.org/)
-[![License](https://img.shields.io/badge/license-MIT-blue.style=flat-square)](#license)
-[![DevSecOps](https://img.shields.io/badge/Security-DevSecOps-brightgreen?style=flat-square)](https://github.com/Saeg7/DevSecOps)
-
-[Описание](#-описание) • [Особенности](#-особенности) • [Стек технологий](#-стек-технологий) • [Быстрый старт](#-быстрый-старт) • [Структура](#-структура-проекта)
-
-</div>
+**Socket Keeper** is a lightweight, low-level HTTP web server written in C++17 using POSIX sockets. The project demonstrates core **DevSecOps principles** by pairing raw socket networking with automated host-based security hardening (UFW firewalling & Fail2ban rate-limiting).
 
 ---
 
-## 📝 Описание
+## 🚀 Architectural Overview
 
-**Socket Keeper** — это проект в рамках практики DevSecOps, предназначенный для надёжного мониторинга, управления и защиты сетевых подключений по протоколам WebSockets / TCP.
-
-Проект разработан с акцентом на безопасную обработку соединений, минимальное потребление ресурсов и соблюдение лучших стандартов контейнеризации и CI/CD.
-
----
-
-## ✨ Особенности
-
-- ⚡ **Высокая производительность:** Написан на Go с использованием асинхронной обработки горутин.
-- 🔒 **Безопасность (DevSecOps):** Встроенные проверки уязвимостей, безопасная работа с окружением и изолированные контейнеры.
-- 🐳 **Docker-ready:** Полностью подготовлен к запуску в контейнерах.
-- 📊 **Мониторинг:** Логирование и отслеживание статуса активных подключений.
+* **Multithreaded Connection Handling:** Spawns decoupled threads (`std::thread`) per client request to ensure responsiveness under load.
+* **POSIX Networking:** Built directly on system sockets (`sys/socket.h`, `arpa/inet.h`) without heavy third-party web frameworks.
+* **Automated Security Hardening (`harden.sh`):**
+  * **UFW Integration:** Sets a strict default-deny incoming policy, allowing only essential ports (`22/TCP` for SSH, `8080/TCP` for HTTP).
+  * **Fail2ban Jail:** Parses server log streams (`socket_keeper.log`) using custom regex patterns to dynamically ban IP addresses exhibiting rapid-fire request behavior.
+  * **Principle of Least Privilege:** Automates build and runtime execution so the binary runs strictly under non-root user privileges.
 
 ---
 
-## 🛠 Стек технологий
+## 🛠️ Project Structure
 
-| Категория | Технологии |
-| :--- | :--- |
-| **Язык программирования** | Go (Golang) |
-| **Контейнеризация** | Docker, Docker Compose |
-| **Безопасность & CI/CD** | DevSecOps Pipelines, Static Analysis (SAST) |
-| **ОС / Окружение** | Linux (Ubuntu), Bash |
-
----
-
-## 🚀 Быстрый старт
-
-### Требования
-
-Убедитесь, что у вас установлены:
-* [Go](https://golang.org/doc/install) (версия 1.20+)
-* [Git](https://git-scm.com/)
-* [Docker](https://docs.docker.com/get-docker/) *(опционально)*
-
-### Локальный запуск
-
-1. **Клонируйте репозиторий:**
-   ```bash
-   git clone [https://github.com/Saeg7/DevSecOps.git](https://github.com/Saeg7/DevSecOps.git)
-   cd DevSecOps/01-socket-keeper/Socket-Keeper
+```text
+socket-keeper/
+├── CMakeLists.txt        # Build system configuration
+├── public/               # Static assets
+│   └── index.html        # Served HTML page
+├── scripts/
+│   └── harden.sh         # Security hardening & build automation script
+├── src/
+│   └── main.cpp          # C++ HTTP server source code
+└── README.md             # Project documentation
