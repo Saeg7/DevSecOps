@@ -1,0 +1,8 @@
+build/
+bin/
+*.log
+scripts/*.log
+.vscode/
+.idea/
+CMakeCache.txt
+CMakeFiles/
